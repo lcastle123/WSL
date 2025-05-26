@@ -14,7 +14,7 @@ class CartPole(hj.ControlAndDisturbanceAffineDynamics):
         self.m_c = m_c
         self.l = l
         self.g = g
-        self.u_bar = u_bar
+        #self.u_bar = u_bar_up
         #self.d = d_bar
         if control_space is None:
             control_space = hj.sets.Box(jnp.array([-u_bar]), jnp.array([u_bar]))

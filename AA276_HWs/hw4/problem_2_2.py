@@ -6,8 +6,6 @@ import numpy as np
 import hj_reachability as  hj
 import cvxpy as cp
 
-from hj_reachability import dynamics
-from hj_reachability import sets
 from scipy.interpolate import interpn
 
 import matplotlib.pyplot as plt
@@ -27,7 +25,7 @@ class Controller:
 
     def __init__(self):
         self.reset()
-        self.u_nom = 10.
+        self.u_nom = -10.
         self.d_bar = 5.
         self.n = 2
         self.m_p = 1
@@ -35,7 +33,6 @@ class Controller:
         self.l = 1
         self.g = 2
         self.dt = 0.01
-        self.start = True
 
         self.grid = hj.Grid.from_lattice_parameters_and_boundary_conditions(hj.sets.Box(np.array([0, -10]), np.array([2*np.pi, 10])),(101, 101))
         self.failure_values = -jnp.abs((self.grid.states[...,0]%(2*jnp.pi)) - jnp.pi) + jnp.pi/2
@@ -67,9 +64,10 @@ class Controller:
         self.s_history.append(s)
         self.t_history.append(t)
 
-        if len(self.d_estimate_history) % 100 == 0 and len(self.d_estimate_history) > 0:
-            d_bar_low = np.min(self.d_estimate_history[-5:]) - 1.5
-            d_bar_up = np.max(self.d_estimate_history[-5:]) + 1.5
+        if (len(self.d_estimate_history) % 200 == 0 and len(self.d_estimate_history) > 0) or (len(self.d_estimate_history) == 2):
+            d_bar_low = np.min(self.d_estimate_history[-199:]) - 1.5
+            d_bar_up = np.max(self.d_estimate_history[-199:]) + 1.5
+            self.grid = hj.Grid.from_lattice_parameters_and_boundary_conditions(hj.sets.Box(np.array([0, -10]), np.array([2*np.pi, 10])),(101, 101))
             self.dynamics = CartPole(d_bar_low=d_bar_low, d_bar_up=d_bar_up)
             values = hj.solve(self.solver_settings,self.dynamics, self.grid, self.times, self.failure_values)
             self.values = values[-1]
@@ -91,18 +89,11 @@ class Controller:
             d_estimate = d_theta_dot - f_val - g_val
             self.d_estimate_history.append(d_estimate.item())
 
-        if self.start:
-            u = self.lqr_control(s, t)
-            if s[1] < jnp.pi/2*1.1:
-                self.start = False
-        else: 
-            u = self.smooth_blending_safety_filter(s, self.u_nom, self.d_estimate_history[-1], 15, 1e4)
+        
+        u = self.smooth_blending_safety_filter(s, self.u_nom, self.d_estimate_history[-1], 10, 1e4)
         
         self.u_history.append(u)
 
-        if len(self.u_history) == 995:
-            self.plot_trajectory()
-        #print("theta", s[1])
         return np.array([u])    
 
     def data_to_visualize(self):
@@ -138,8 +129,6 @@ class Controller:
         bounds_error=False,
         fill_value=None
         )
-        # Wrap theta in [0, 2pi]
-        x = s[1] % (2 * np.pi)
         return v.item()
     
     def grad_at_state(self, s):
@@ -257,7 +246,7 @@ class Controller:
         """
         s = jnp.array(jnp.array([s[1], s[3]], dtype=jnp.float32)) 
         dt = self.dt
-        Q = jnp.eye(self.n)  # State cost matrix
+        Q = 1000*jnp.eye(self.n)  # State cost matrix
         R = jnp.array([[1]])
         A = np.array([
             [0, 1],
@@ -286,7 +275,21 @@ class Controller:
             raise RuntimeError("Ricatti recursion did not converge!")
         #print("K:", K)
 
-        s_tilde = s - np.array([jnp.pi/2*1.1 , 0])
+        s_tilde = s - np.array([2, 0])
         u = K @ s_tilde
 
         return u.item()
+
+    def least_restricive_control(self, s, t):
+        """
+        Least restrictive control for the cart-pole system.
+        This is a placeholder function and should be implemented as needed.
+
+        Args:
+            s (np.ndarray): The current state: [x, theta, x_dot, theta_dot]
+            t (float): The current time
+
+        Returns:
+            u (np.ndarray): The control input [u]
+        """
+        return self.dynamics.optimal_control(jnp.array([s[1], s[3]]), t, self.grad_at_state(jnp.array([s[1], s[3]]))).item()

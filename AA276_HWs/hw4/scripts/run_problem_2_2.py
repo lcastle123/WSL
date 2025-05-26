@@ -16,10 +16,10 @@ else:
 #save_animation = input() == 'y'
 save_animation = 'y'
 
-#ds = [-5., -2.5, 0., 2.5, 5.]
-#labels = ['A', 'B', 'C', 'D', 'E']
-ds = [2.5]
-labels = ['D']
+ds = [-5., -2.5, 0., 2.5, 5.]
+labels = ['A', 'B', 'C', 'D', 'E']
+#ds = [2.5]
+#labels = ['D']
 qualifieds = []
 max_distances = []
 

@@ -1,0 +1,52 @@
+        s = jnp.array(jnp.array([s[1], s[2], s[3]], dtype=jnp.float32)) 
+        dt = self.dt
+        Q = 100*jnp.eye(self.n)  # State cost matrix
+        R = jnp.array([[1]])
+        A = np.array([
+            [0, 0, 1],
+            [self.m_p*self.g/self.m_c, 0, 0],
+            [(self.m_c+self.m_p)*self.g/(self.l*self.m_c), 0, 0]
+            ])
+        B = np.array([
+            [0],
+            [1 / (self.m_c)],
+            [1 / (self.l * (self.m_c))]
+        ])
+        A = np.eye(self.n) + dt * A
+        B = dt * B
+
+        eps = 1e-4  # Riccati recursion convergence tolerance
+        max_iters =2000  # Riccati recursion maximum number of iterations
+        P_prev = np.zeros((self.n, self.n))  # initialization
+        converged = False
+        for _ in range(max_iters):
+            # Apply the Ricatti equation until convergence
+            K = -np.linalg.inv(R + B.T @ P_prev @ B) @ (B.T @ P_prev @ A)
+            P = Q + A.T @ P_prev@ (A + B @ K)
+            if np.max(np.abs(P - P_prev)) < eps:
+                converged = True
+                break
+            P_prev = P
+        if not converged:
+            raise RuntimeError("Ricatti recursion did not converge!")
+        #print("K:", K)
+
+        s_tilde = s - np.array([jnp.pi/2*1.1 , 0.1, 0])
+        u = K @ s_tilde
+
+        return u.item()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
