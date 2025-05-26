@@ -1,0 +1,10 @@
+numpy
+scipy
+cvxpy
+matplotlib
+jax
+jaxlib
+tqdm
+hj-reachability
+plotly
+
