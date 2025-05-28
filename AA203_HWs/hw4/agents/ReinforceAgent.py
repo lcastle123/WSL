@@ -62,11 +62,30 @@ class ReinforceAgent(Agent):
         ###     torch.stack: https://docs.pytorch.org/docs/stable/generated/torch.stack.html
 
         # 1) Naive REINFORCE
+        # rewards = torch.tensor(rewards, dtype=torch.float)
+        # discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
+        # results = (rewards * discounts).sum()
+        # loss = -(torch.stack(log_probs) * results).sum()
 
         # 2) REINFORCE with causality trick
+        rewards = torch.tensor(rewards, dtype=torch.float)
+        discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
+        results = (rewards * discounts)
+        results = results.flip(0).cumsum(0).flip(0)  # cumulative sum of rewards
+        loss = -(torch.stack(log_probs) * results).sum()
+
 
         # 3) REINFORCE with causality trick and baseline to "center" the returns
-        loss = None
+        rewards = torch.tensor(rewards, dtype=torch.float)
+        discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
+        results = (rewards * discounts)
+        b = rewards.mean()
+        results = results - b
+        results = results.flip(0).cumsum(0).flip(0)
+        loss = -(torch.stack(log_probs) * results).sum()
+
+
+        
         ###########################################################################
 
         self.optimizer.zero_grad()

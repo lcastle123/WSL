@@ -38,11 +38,11 @@ def main(args: argparse.Namespace) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-name", type=str, default="CartPole-v1", help="the openai gym environment in which we will instantiate the RL agent.")
-    parser.add_argument("--agent-name", type=str, default="qlearning", help="the policy you wish to instantiate e.g., 'basic', 'reinforce'.")
+    parser.add_argument("--agent-name", type=str, default="reinforce", help="the policy you wish to instantiate e.g., 'basic', 'reinforce'.")
     parser.add_argument("--state-dim", type=int, default="4", help="the dimension of the cartpole state space.")
     parser.add_argument("--action-dim", type=int, default="2", help="the dimension of the cartpole action space.")
     parser.add_argument("--use-gpu", action='store_true', help="whether to run training on your system's gpu, if available, (a gpu is not necessary to complete this assignment!).")
-    parser.add_argument("--mode", type=str, choices=['train', 'test'], default="test", help="mode to run: 'train' or 'test'")
+    parser.add_argument("--mode", type=str, choices=['train', 'test'], default="train", help="mode to run: 'train' or 'test'")
     parser.add_argument("--visualization", action='store_true', help="whether to visualize the cartpole environment during the rollout.")
     parser.add_argument("--checkpoint-path", type=str, help="path to the checkpoint of a trained policy network (for test mode)")
     

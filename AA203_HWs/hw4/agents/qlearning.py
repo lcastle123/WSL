@@ -109,6 +109,7 @@ class QLearning(Agent):
         # Training Loop
         for episode in tqdm(range(num_episodes), desc="Training Episode Progress"):
             state, _ = env.reset()
+            state = torch.tensor(state, dtype=torch.float32).to(self.device)
             done = False
             while not done:
                 action = self.policy(state, train=True)
