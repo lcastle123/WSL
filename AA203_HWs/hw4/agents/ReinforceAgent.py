@@ -68,21 +68,28 @@ class ReinforceAgent(Agent):
         # loss = -(torch.stack(log_probs) * results).sum()
 
         # 2) REINFORCE with causality trick
-        rewards = torch.tensor(rewards, dtype=torch.float)
-        discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
-        results = (rewards * discounts)
-        results = results.flip(0).cumsum(0).flip(0)  # cumulative sum of rewards
-        loss = -(torch.stack(log_probs) * results).sum()
+        # rewards = torch.tensor(rewards, dtype=torch.float)
+        # discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
+        # loss = torch.tensor(0.0, dtype=torch.float)
+        # for t in range(len(rewards)):
+        #     result = torch.tensor(0.0, dtype=torch.float)
+        #     for tp in range(t,len(rewards)):
+        #         result += rewards[tp] * discounts[tp-t]
+        #     loss += log_probs[t] * result
+        # loss = -loss.sum()
 
 
         # 3) REINFORCE with causality trick and baseline to "center" the returns
         rewards = torch.tensor(rewards, dtype=torch.float)
         discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
-        results = (rewards * discounts)
-        b = rewards.mean()
-        results = results - b
-        results = results.flip(0).cumsum(0).flip(0)
-        loss = -(torch.stack(log_probs) * results).sum()
+        loss = torch.tensor(0.0, dtype=torch.float)
+        baseline = rewards.mean()
+        for t in range(len(rewards)):
+            result = torch.tensor(0.0, dtype=torch.float)
+            for tp in range(t,len(rewards)):
+                result += rewards[tp] * discounts[tp-t]
+            loss += log_probs[t] * result  - baseline
+        loss = -loss.sum()
 
 
         
