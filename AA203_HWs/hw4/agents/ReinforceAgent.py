@@ -83,7 +83,7 @@ class ReinforceAgent(Agent):
         rewards = torch.tensor(rewards, dtype=torch.float)
         discounts = torch.tensor([self.gamma ** i for i in range(len(rewards))], dtype=torch.float)
         loss = torch.tensor(0.0, dtype=torch.float)
-        baseline = rewards.mean()
+        baseline = (rewards * discounts).mean()
         for t in range(len(rewards)):
             result = torch.tensor(0.0, dtype=torch.float)
             for tp in range(t,len(rewards)):
